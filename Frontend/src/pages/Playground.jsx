@@ -70,10 +70,10 @@ function Playground() {
       {/* ── END NAVBAR ───────────────────────────────────────────── */}
 
       {/* ── MAIN CONTENT ───────────────────────────────────────────────── */}
-      <div className="flex flex-1 gap-4 p-4 overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 gap-4 p-4 overflow-y-auto lg:overflow-hidden">
 
         {/* ── LEFT: Editor Panel ───── */}
-        <div className="flex flex-col flex-1 gap-3">
+        <div className="flex flex-col flex-1 gap-3 w-full lg:w-auto">
 
           {/* Language Selector + Run Button bar */}
           <div className="flex items-center justify-between bg-base-100 rounded-xl px-4 py-3 border border-base-300 shadow-sm">
@@ -123,7 +123,7 @@ function Playground() {
         </div>
 
         {/* ── RIGHT: Input + Output Panel ───── */}
-        <div className="flex flex-col w-96 gap-3">
+        <div className="flex flex-col w-full lg:w-96 gap-3">
 
           {/* Stdin box */}
           <div className="bg-base-100 rounded-xl border border-base-300 p-3 flex flex-col gap-2 shadow-sm">

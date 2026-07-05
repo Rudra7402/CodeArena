@@ -312,7 +312,7 @@ function Profile() {
           <div className="flex border-b border-base-300 bg-base-300">
             <button
               onClick={() => setActiveTab('stats')}
-              className={`flex items-center gap-2 px-6 py-4 font-bold text-sm border-b-2 transition-all ${activeTab === 'stats'
+              className={`flex items-center gap-2 px-4 md:px-6 py-3 md:py-4 font-bold text-xs md:text-sm border-b-2 transition-all ${activeTab === 'stats'
                 ? 'border-primary text-primary bg-base-100'
                 : 'border-transparent text-base-content/65 hover:text-base-content hover:bg-base-200/50'
                 }`}
@@ -323,7 +323,7 @@ function Profile() {
             {!userId && (
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`flex items-center gap-2 px-6 py-4 font-bold text-sm border-b-2 transition-all ${activeTab === 'settings'
+                className={`flex items-center gap-2 px-4 md:px-6 py-3 md:py-4 font-bold text-xs md:text-sm border-b-2 transition-all ${activeTab === 'settings'
                   ? 'border-primary text-primary bg-base-100'
                   : 'border-transparent text-base-content/65 hover:text-base-content hover:bg-base-200/50'
                   }`}

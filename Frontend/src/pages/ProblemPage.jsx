@@ -262,9 +262,9 @@ const ProblemPage = () => {
       </div>
 
       {/* Main split workspace layout */}
-      <div className="flex-1 flex p-3 gap-3 bg-base-200 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row p-3 gap-3 bg-base-200 overflow-y-auto lg:overflow-hidden">
         {/* Left Panel */}
-        <div className="w-1/2 flex flex-col bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm">
+        <div className="w-full lg:w-1/2 h-[500px] lg:h-auto flex flex-col bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm">
           {/* Left Tabs */}
           <div className="tabs tabs-bordered bg-base-200 px-4">
             <button
@@ -534,7 +534,7 @@ const ProblemPage = () => {
         </div>
 
         {/* Right Panel */}
-        <div className="w-1/2 flex flex-col bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm">
+        <div className="w-full lg:w-1/2 h-[600px] lg:h-auto flex flex-col bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm">
           {/* Right Tabs */}
           <div className="tabs tabs-bordered bg-base-200 px-4">
             <button

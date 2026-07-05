@@ -110,7 +110,7 @@ function Leaderboard() {
 
                 {/* 1st Place */}
                 {topThree[0] && (
-                  <div className="order-1 md:order-2 bg-gradient-to-b from-amber-500/5 to-base-100 rounded-2xl border-2 border-amber-400 p-6 shadow-md flex flex-col items-center justify-center text-center relative hover:-translate-y-1.5 transition-transform duration-300 md:h-[210px] scale-105">
+                  <div className="order-1 md:order-2 bg-gradient-to-b from-amber-500/5 to-base-100 rounded-2xl border-2 border-amber-400 p-6 shadow-md flex flex-col items-center justify-center text-center relative hover:-translate-y-1.5 transition-transform duration-300 md:h-[210px] scale-100 md:scale-105">
                     <div className="absolute -top-5 bg-amber-400 text-amber-950 font-black rounded-full px-4 py-1 text-xs border border-amber-300 shadow-md flex items-center gap-1 animate-bounce">
                       👑 Champion
                     </div>
@@ -167,7 +167,7 @@ function Leaderboard() {
                       <th className="w-20 pl-6">Rank</th>
                       <th>User</th>
                       <th className="text-center w-36">Problems Solved</th>
-                      <th className="text-center w-36">Active Streak</th>
+                      <th className="text-center w-36 hidden sm:table-cell">Active Streak</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-base-200">
@@ -199,7 +199,7 @@ function Leaderboard() {
                               {u.solvedCount}
                             </span>
                           </td>
-                          <td className="text-center align-middle">
+                          <td className="text-center align-middle hidden sm:table-cell">
                             {u.currentStreak > 0 ? (
                               <span
                                 className="badge badge-warning text-warning-content font-bold px-3 py-2.5 rounded-full select-none"

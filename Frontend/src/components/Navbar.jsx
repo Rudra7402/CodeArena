@@ -26,6 +26,43 @@ function Navbar() {
 
       {/* ── Left: Logo + Nav Links ── */}
       <div className="flex-1 flex items-center gap-1">
+        {/* Mobile Hamburger Dropdown Menu */}
+        <div className="dropdown sm:hidden">
+          <div tabIndex={0} role="button" className="btn btn-ghost btn-circle btn-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h7"
+              />
+            </svg>
+          </div>
+          <ul
+            tabIndex={0}
+            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-50 mt-3 w-48 p-2 shadow-lg border border-base-300"
+          >
+            <li>
+              <NavLink to="/problems">Problems</NavLink>
+            </li>
+            <li>
+              <NavLink to="/playground">Compiler</NavLink>
+            </li>
+            <li>
+              <NavLink to="/leaderboard">Leaderboard</NavLink>
+            </li>
+            <li>
+              <NavLink to="/premium" className="text-amber-500 hover:text-amber-600">✨ Premium</NavLink>
+            </li>
+          </ul>
+        </div>
+
         <NavLink to="/" className="btn btn-ghost text-lg font-bold flex items-center gap-2">
           <Code2 className="w-5 h-5 text-primary" />
           CodeArena
