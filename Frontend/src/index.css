@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* ── Global Theme Overrides ─────────────────────────────────────────────
+   Force DaisyUI dark theme primary color to orange (#f97316)
+   so all btn-primary, text-primary, link-primary etc. are consistently
+   orange across the entire platform — matching the LandingPage accent.
+   oklch(70.53% 0.189 41.93) is the oklch equivalent of #f97316
+──────────────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-primary: oklch(70.53% 0.189 41.93);   /* orange: #f97316 */
+  --color-primary-content: oklch(98% 0 0);       /* near-white text on orange buttons */
+
+  /* Soft Charcoal Theme Overrides (LeetCode Style) */
+  --color-base-100: #262626;                     /* LeetCode soft dark-charcoal for cards and panels */
+  --color-base-200: #1a1a1a;                     /* LeetCode dark gray main background */
+  --color-base-300: #333333;                     /* Slate gray for borders and divider lines */
+  --color-base-content: #eff1f5;                 /* Clean off-white text for excellent readability */
+}

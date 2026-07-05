@@ -1,0 +1,33 @@
+# Node dependencies
+node_modules/
+Backend/node_modules/
+Frontend/node_modules/
+
+# Environment configurations (Keep secrets secret!)
+.env
+Backend/.env
+Frontend/.env
+.env*.local
+
+# Production build outputs
+Frontend/dist/
+Frontend/build/
+Backend/dist/
+Backend/build/
+
+# Log files
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System and editor files
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
