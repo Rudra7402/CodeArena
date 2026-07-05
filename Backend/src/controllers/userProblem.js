@@ -141,6 +141,12 @@ const deleteProblem = async (req, res) => {
         // Delete all submissions related to this problem
         await Submission.deleteMany({ problemId: id });
 
+        // Pull this problem ID from users' problemSolved arrays
+        await User.updateMany(
+            { problemSolved: id },
+            { $pull: { problemSolved: id } }
+        );
+
         const deletedProblem = await Problem.findByIdAndDelete(id);
 
         if (!deletedProblem) {
