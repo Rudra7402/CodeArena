@@ -278,7 +278,7 @@ const submittedProblem = async (req, res) => {
         res.status(200).send(ans);
     }
     catch (err) {
-        res.status(400).send("Internl Server error");
+        res.status(400).send("Internal Server Error");
     }
 }
 

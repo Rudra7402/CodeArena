@@ -24,7 +24,7 @@ const submitBatch = async (submissions) => {
             base64_encoded: 'false'
         },
         headers: {
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY || '770a8c9cafmsh85f9431cd5cc3c8p1e6773jsn8b20106b0ff5',
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY,
             'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
             'Content-Type': 'application/json'
         },
@@ -61,7 +61,7 @@ const submitToken = async (resultToken) => {
             fields: '*'
         },
         headers: {
-            'x-rapidapi-key': process.env.RAPIDAPI_KEY || '770a8c9cafmsh85f9431cd5cc3c8p1e6773jsn8b20106b0ff5',
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY,
             'x-rapidapi-host': 'judge0-ce.p.rapidapi.com',
             'Content-Type': 'application/json'
         }
@@ -71,10 +71,6 @@ const submitToken = async (resultToken) => {
         try {
             const response = await axios.request(options);
 
-            console.log("Submit Token:- ");
-            console.log(response);
-            console.log("response.data.submissions:- ");
-            console.log(response.data.submissions);
             return (response.data);
         }
         catch (error) {
@@ -85,8 +81,6 @@ const submitToken = async (resultToken) => {
 
     while (true) {
         const result = await fetchData();
-        console.log("Result:-");
-        console.log(result);
 
         if (!result || !result.submissions) {
             throw new Error("Unable to retrieve results from Judge0 API (possibly rate-limited or offline)");

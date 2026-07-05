@@ -98,7 +98,7 @@ const login = async (req, res) => {
         });
         res.status(200).json({
             user: reply,
-            message: "Loggin Successfully"
+            message: "Logged in Successfully"
         });
     }
     catch (err) {

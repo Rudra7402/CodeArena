@@ -180,9 +180,9 @@ function Premium() {
                 <p className="text-xs text-base-content/50 mt-1">One-time payment. Lifetime access.</p>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-extrabold text-base-content">₹299</span>
+                <span className="text-4xl font-extrabold text-base-content">₹499</span>
                 <span className="text-xs line-through text-base-content/40">₹999</span>
-                <span className="badge badge-success badge-sm font-semibold">70% OFF</span>
+                <span className="badge badge-success badge-sm font-semibold">50% OFF</span>
               </div>
               
               <div className="divider my-0"></div>
