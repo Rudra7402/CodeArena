@@ -129,4 +129,65 @@ Remember: Your goal is to help users learn and understand DSA concepts through t
     }
 }
 
-module.exports = solveDoubt;
+const calculateComplexity = async (req, res) => {
+    try {
+        const { code, language, problemTitle, problemDescription } = req.body;
+
+        if (!code || !language) {
+            return res.status(400).json({ message: "Code and language are required" });
+        }
+
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_KEY });
+
+        const prompt = `
+You are an expert algorithms analyst. Your task is to analyze the following code submitted for the problem "${problemTitle || 'DSA Problem'}".
+
+Problem Description:
+${problemDescription || 'Calculate complexity of the code.'}
+
+Submitted Code in ${language}:
+\`\`\`${language}
+${code}
+\`\`\`
+
+Provide the Time Complexity and Space Complexity of this code.
+Your output must be a clean JSON object with exactly three keys: "timeComplexity", "spaceComplexity", and "explanation". 
+Do not include any markdown wrapper or markdown block formatting around the JSON—just return the raw JSON string.
+
+Example JSON output format:
+{
+  "timeComplexity": "O(N log N)",
+  "spaceComplexity": "O(N)",
+  "explanation": "We sort the array which takes O(N log N) time, and allocate an auxiliary array of size N which takes O(N) space."
+}
+`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [
+                { role: "user", parts: [{ text: prompt }] }
+            ]
+        });
+
+        // Parse the JSON output from Gemini
+        let resultText = response.text.trim();
+        // Remove markdown code block symbols if Gemini wrapped it despite instructions
+        if (resultText.startsWith("```json")) {
+            resultText = resultText.replace(/^```json/, "").replace(/```$/, "").trim();
+        } else if (resultText.startsWith("```")) {
+            resultText = resultText.replace(/^```/, "").replace(/```$/, "").trim();
+        }
+
+        const parsedResult = JSON.parse(resultText);
+        res.status(200).json(parsedResult);
+
+    } catch (err) {
+        console.error("Complexity Calculation Error:", err.message);
+        res.status(500).json({
+            message: "Failed to calculate complexity",
+            error: err.message
+        });
+    }
+};
+
+module.exports = { solveDoubt, calculateComplexity };

@@ -9,7 +9,7 @@ import ChatAi from '../components/ChatAi';
 import Editorial from '../components/Editorial';
 import Navbar from '../components/Navbar';
 import ReactMarkdown from 'react-markdown';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Sparkles, Hourglass, Database, Brain, CheckCircle2, Award, Maximize2, Minimize2 } from 'lucide-react';
 
 const langMap = {
   cpp: 'C++',
@@ -37,6 +37,10 @@ const ProblemPage = () => {
   const [customInput, setCustomInput] = useState('');
   const [useCustomInput, setUseCustomInput] = useState(false);
   const [notes, setNotes] = useState('');
+  const [complexity, setComplexity] = useState(null);
+  const [calculatingComplexity, setCalculatingComplexity] = useState(false);
+  const [recommendations, setRecommendations] = useState([]);
+  const [isEditorFull, setIsEditorFull] = useState(false);
   const [time, setTime] = useState(0);
   const [timerRunning, setTimerRunning] = useState(true);
   const editorRef = useRef(null);
@@ -46,6 +50,8 @@ const ProblemPage = () => {
     if (problemId) {
       const savedNote = localStorage.getItem(`note_${user?._id || 'guest'}_${problemId}`);
       setNotes(savedNote || '');
+      setComplexity(null);
+      setRecommendations([]);
     }
   }, [problemId, user]);
 
@@ -195,6 +201,26 @@ const ProblemPage = () => {
     }
   };
 
+  const handleCalculateComplexity = async () => {
+    if (!problem) return;
+    setCalculatingComplexity(true);
+    try {
+      const response = await axiosClient.post('/ai/complexity', {
+        code,
+        language: selectedLanguage,
+        problemTitle: problem.title,
+        problemDescription: problem.description
+      });
+      setComplexity(response.data);
+    } catch (error) {
+      console.error("Error calculating complexity:", error);
+      alert("Failed to calculate complexity. Please try again.");
+    } finally {
+      setCalculatingComplexity(false);
+    }
+  };
+
+
   const handleSubmitCode = async () => {
     // Gate: guests cannot submit code, redirect them to login
     if (!user) {
@@ -203,6 +229,8 @@ const ProblemPage = () => {
     }
     setLoading(true);
     setSubmitResult(null);
+    setComplexity(null);
+    setRecommendations([]);
 
     try {
       const response = await axiosClient.post(`/submission/submit/${problemId}`, {
@@ -213,6 +241,15 @@ const ProblemPage = () => {
       setSubmitResult(response.data);
       setLoading(false);
       setActiveRightTab('result');
+
+      if (response.data.accepted) {
+        try {
+          const recRes = await axiosClient.get(`/problem/recommend/${problemId}`);
+          setRecommendations(recRes.data);
+        } catch (recErr) {
+          console.error("Error loading recommendations:", recErr);
+        }
+      }
 
     } catch (error) {
       console.error('Error submitting code:', error);
@@ -264,7 +301,7 @@ const ProblemPage = () => {
       {/* Main split workspace layout */}
       <div className="flex-1 flex flex-col lg:flex-row p-3 gap-3 bg-base-200 overflow-y-auto lg:overflow-hidden">
         {/* Left Panel */}
-        <div className="w-full lg:w-1/2 h-[500px] lg:h-auto flex flex-col bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm">
+        <div className={`w-full lg:w-1/2 h-[500px] lg:h-auto flex flex-col bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm ${isEditorFull ? 'hidden' : ''}`}>
           {/* Left Tabs */}
           <div className="tabs tabs-bordered bg-base-200 px-4">
             <button
@@ -534,26 +571,46 @@ const ProblemPage = () => {
         </div>
 
         {/* Right Panel */}
-        <div className="w-full lg:w-1/2 h-[600px] lg:h-auto flex flex-col bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm">
+        <div className={`h-[600px] lg:h-auto flex flex-col bg-base-100 border border-base-300 rounded-xl overflow-hidden shadow-sm ${isEditorFull ? 'w-full' : 'w-full lg:w-1/2'}`}>
           {/* Right Tabs */}
-          <div className="tabs tabs-bordered bg-base-200 px-4">
+          <div className="tabs tabs-bordered bg-base-200 px-4 flex justify-between items-center select-none">
+            <div className="flex">
+              <button
+                className={`tab ${activeRightTab === 'code' ? 'tab-active' : ''}`}
+                onClick={() => setActiveRightTab('code')}
+              >
+                Code
+              </button>
+              <button
+                className={`tab ${activeRightTab === 'testcase' ? 'tab-active' : ''}`}
+                onClick={() => setActiveRightTab('testcase')}
+              >
+                Testcase
+              </button>
+              <button
+                className={`tab ${activeRightTab === 'result' ? 'tab-active' : ''}`}
+                onClick={() => setActiveRightTab('result')}
+              >
+                Result
+              </button>
+            </div>
+            {/* Fullscreen Toggle */}
             <button
-              className={`tab ${activeRightTab === 'code' ? 'tab-active' : ''}`}
-              onClick={() => setActiveRightTab('code')}
+              onClick={() => setIsEditorFull(!isEditorFull)}
+              className="btn btn-ghost btn-xs rounded-lg px-2 text-base-content/60 hover:text-base-content flex items-center gap-1 font-bold"
+              title={isEditorFull ? "Exit Fullscreen" : "Fullscreen Editor"}
             >
-              Code
-            </button>
-            <button
-              className={`tab ${activeRightTab === 'testcase' ? 'tab-active' : ''}`}
-              onClick={() => setActiveRightTab('testcase')}
-            >
-              Testcase
-            </button>
-            <button
-              className={`tab ${activeRightTab === 'result' ? 'tab-active' : ''}`}
-              onClick={() => setActiveRightTab('result')}
-            >
-              Result
+              {isEditorFull ? (
+                <>
+                  <Minimize2 size={13} />
+                  <span className="text-[10px]">Exit Full</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 size={13} />
+                  <span className="text-[10px]">Full Screen</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -660,26 +717,6 @@ const ProblemPage = () => {
                       mouseWheelZoom: true,
                     }}
                   />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="p-4 border-t border-base-300 flex justify-end">
-                  <div className="flex gap-2">
-                    <button
-                      className={`btn btn-outline btn-sm ${loading ? 'loading' : ''}`}
-                      onClick={handleRun}
-                      disabled={loading}
-                    >
-                      Run
-                    </button>
-                    <button
-                      className={`btn btn-primary btn-sm ${loading ? 'loading' : ''}`}
-                      onClick={handleSubmitCode}
-                      disabled={loading}
-                    >
-                      Submit
-                    </button>
-                  </div>
                 </div>
               </div>
             )}
@@ -887,19 +924,26 @@ const ProblemPage = () => {
                 <h3 className="font-extrabold text-base text-base-content mb-4 select-none">Submission Result</h3>
 
                 {submitResult ? (
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {/* Status header card */}
-                    <div className={`p-5 rounded-2xl border ${submitResult.accepted
-                      ? 'bg-success/10 border-success/15 text-success'
-                      : 'bg-error/10 border-error/15 text-error'
-                      }`}>
-                      <h4 className="font-black text-2xl tracking-tight select-none">
-                        {submitResult.accepted ? '🎉 Accepted' : `❌ ${submitResult.status || 'Submission Failed'}`}
-                      </h4>
-                      <p className="text-xs font-bold text-base-content/50 mt-1 select-none">
-                        Completed evaluation for the submission code.
-                      </p>
-                    </div>
+                    {submitResult.accepted ? (
+                      <div className="flex flex-col items-center justify-center py-4 select-none">
+                        <div className="w-20 h-20 rounded-full bg-success/15 border-2 border-success/30 flex items-center justify-center shadow-inner mb-2 animate-bounce">
+                          <CheckCircle2 className="w-12 h-12 text-success" />
+                        </div>
+                        <div className="text-2xl font-black text-success tracking-tight">Accepted</div>
+                        <p className="text-xs text-base-content/40 mt-1">All test cases passed successfully!</p>
+                      </div>
+                    ) : (
+                      <div className="p-5 rounded-2xl border bg-error/10 border-error/15 text-error">
+                        <h4 className="font-black text-2xl tracking-tight select-none">
+                          ❌ {submitResult.status || 'Submission Failed'}
+                        </h4>
+                        <p className="text-xs font-bold text-base-content/50 mt-1 select-none">
+                          Completed evaluation for the submission code.
+                        </p>
+                      </div>
+                    )}
 
                     {!submitResult.accepted && submitResult.error && (
                       <div className="bg-error/5 border border-error/20 p-4 rounded-xl space-y-1">
@@ -912,27 +956,118 @@ const ProblemPage = () => {
                       </div>
                     )}
 
+                    {/* AI Complexity Analysis */}
+                    {submitResult.accepted && !complexity && (
+                      <div className="flex justify-center mt-2 mb-4">
+                        <button
+                          onClick={handleCalculateComplexity}
+                          disabled={calculatingComplexity}
+                          className="btn btn-warning btn-md gap-2 w-full max-w-sm font-bold shadow-md hover:scale-105 transition-transform"
+                        >
+                          {calculatingComplexity ? (
+                            <span className="loading loading-spinner loading-sm"></span>
+                          ) : (
+                            <Sparkles className="w-4 h-4 animate-pulse" />
+                          )}
+                          {calculatingComplexity ? 'Analyzing Complexity...' : 'Calculate Complexity (AI)'}
+                        </button>
+                      </div>
+                    )}
+
+                    {submitResult.accepted && complexity && (
+                      <div className="space-y-4 my-2 text-left">
+                        <div className="grid grid-cols-2 gap-4">
+                          {/* Time Complexity Card */}
+                          <div className="bg-gradient-to-br from-base-200 to-base-300 p-4 border border-base-300 rounded-xl flex items-center gap-3.5 shadow-sm">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                              <Hourglass className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-bold text-base-content/40 uppercase select-none">Time Complexity</div>
+                              <div className="text-lg font-black text-primary leading-tight font-mono">{complexity.timeComplexity}</div>
+                            </div>
+                          </div>
+                          {/* Space Complexity Card */}
+                          <div className="bg-gradient-to-br from-base-200 to-base-300 p-4 border border-base-300 rounded-xl flex items-center gap-3.5 shadow-sm">
+                            <div className="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0">
+                              <Database className="w-5 h-5 text-secondary" />
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-bold text-base-content/40 uppercase select-none">Space Complexity</div>
+                              <div className="text-lg font-black text-secondary leading-tight font-mono">{complexity.spaceComplexity}</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Complexity Explanation */}
+                        {complexity.explanation && (
+                          <div className="bg-base-200/50 border border-base-300/80 p-4 rounded-xl space-y-1">
+                            <label className="text-[10px] font-black uppercase tracking-wider text-base-content/40 select-none flex items-center gap-1.5">
+                              <Brain className="w-3.5 h-3.5 text-primary" /> Complexity Explanation
+                            </label>
+                            <p className="text-xs text-base-content/85 leading-relaxed font-medium">
+                              {complexity.explanation}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Metrics grid details */}
                     <div className="grid grid-cols-3 gap-3">
-                      <div className="bg-base-200 p-3 border border-base-300 rounded-xl text-center">
+                      <div className="bg-base-200 p-3 border border-base-300 rounded-xl text-center shadow-sm">
                         <div className="text-sm font-black text-base-content">
                           {submitResult.passedTestCases} / {submitResult.totalTestCases}
                         </div>
                         <div className="text-[9px] font-bold text-base-content/40 uppercase mt-0.5 select-none">Passed Cases</div>
                       </div>
-                      <div className="bg-base-200 p-3 border border-base-300 rounded-xl text-center">
+                      <div className="bg-base-200 p-3 border border-base-300 rounded-xl text-center shadow-sm">
                         <div className="text-sm font-black text-base-content">
                           {submitResult.runtime || '0.00'}s
                         </div>
                         <div className="text-[9px] font-bold text-base-content/40 uppercase mt-0.5 select-none">Runtime</div>
                       </div>
-                      <div className="bg-base-200 p-3 border border-base-300 rounded-xl text-center">
+                      <div className="bg-base-200 p-3 border border-base-300 rounded-xl text-center shadow-sm">
                         <div className="text-sm font-black text-base-content">
                           {submitResult.memory ? `${submitResult.memory} KB` : 'N/A'}
                         </div>
                         <div className="text-[9px] font-bold text-base-content/40 uppercase mt-0.5 select-none">Memory</div>
                       </div>
                     </div>
+
+
+
+                    {/* Recommended Next Problems */}
+                    {submitResult.accepted && recommendations.length > 0 && (
+                      <div className="space-y-3 mt-6 text-left border-t border-base-300 pt-5">
+                        <h4 className="text-xs font-bold text-base-content/40 uppercase tracking-widest">Recommended Next Problems</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {recommendations.map((rec) => (
+                            <NavLink
+                              key={rec._id}
+                              to={`/problems/${rec._id}`}
+                              className="bg-base-200 hover:bg-base-300/80 border border-base-300 p-4 rounded-xl shadow-sm transition-all flex flex-col gap-1.5 select-none hover:-translate-y-0.5"
+                            >
+                              <div className="font-bold text-sm text-base-content line-clamp-1">{rec.title}</div>
+                              <div className="flex items-center justify-between mt-1">
+                                <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
+                                  rec.difficulty.toLowerCase() === 'easy' ? 'bg-success/15 text-success' :
+                                  rec.difficulty.toLowerCase() === 'medium' ? 'bg-warning/15 text-warning' :
+                                  'bg-error/15 text-error'
+                                }`}>
+                                  {rec.difficulty}
+                                </span>
+                                {rec.tags && rec.tags.length > 0 && (
+                                  <span className="text-[9px] text-base-content/50 line-clamp-1 max-w-[120px]">
+                                    {Array.isArray(rec.tags) ? rec.tags.join(', ') : rec.tags}
+                                  </span>
+                                )}
+                              </div>
+                            </NavLink>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-base-content/45 text-sm p-4 border border-dashed border-base-300 rounded-xl text-center bg-base-200/20 select-none">
@@ -941,6 +1076,26 @@ const ProblemPage = () => {
                 )}
               </div>
             )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="p-4 border-t border-base-300 flex justify-end bg-base-100">
+            <div className="flex gap-2">
+              <button
+                className={`btn btn-outline btn-sm ${loading ? 'loading' : ''}`}
+                onClick={handleRun}
+                disabled={loading}
+              >
+                Run
+              </button>
+              <button
+                className={`btn btn-primary btn-sm ${loading ? 'loading' : ''}`}
+                onClick={handleSubmitCode}
+                disabled={loading}
+              >
+                Submit
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -282,7 +282,48 @@ const submittedProblem = async (req, res) => {
     }
 }
 
-module.exports = { createProblem, updateProblem, deleteProblem, getProblemById, getAdminProblemById, getAllProblems, solvedAllProblemByUser, deleteProfile, submittedProblem };
+const getRecommendations = async (req, res) => {
+    const { id } = req.params;
+    try {
+        if (!id) {
+            return res.status(400).send("Problem ID is required");
+        }
+
+        const currentProblem = await Problem.findById(id);
+        if (!currentProblem) {
+            return res.status(404).send("Problem not found");
+        }
+
+        // Find up to 4 recommendations matching tags or difficulty, excluding the current one
+        let recommendations = await Problem.find({
+            _id: { $ne: id },
+            $or: [
+                { tags: { $in: currentProblem.tags || [] } },
+                { difficulty: currentProblem.difficulty }
+            ]
+        })
+        .select('_id title difficulty tags')
+        .limit(4);
+
+        // If we have fewer than 4, fill the rest with random problems
+        if (recommendations.length < 4) {
+            const excludeIds = [id, ...recommendations.map(r => r._id.toString())];
+            const additional = await Problem.find({
+                _id: { $nin: excludeIds }
+            })
+            .select('_id title difficulty tags')
+            .limit(4 - recommendations.length);
+
+            recommendations = recommendations.concat(additional);
+        }
+
+        res.status(200).json(recommendations);
+    } catch (err) {
+        res.status(500).send("Error: " + err.message);
+    }
+}
+
+module.exports = { createProblem, updateProblem, deleteProblem, getProblemById, getAdminProblemById, getAllProblems, solvedAllProblemByUser, deleteProfile, submittedProblem, getRecommendations };
 
 
 
