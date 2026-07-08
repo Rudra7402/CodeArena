@@ -79,19 +79,26 @@ const submitToken = async (resultToken) => {
         }
     }
 
-    while (true) {
+    let maxAttempts = 25;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+        attempts++;
         const result = await fetchData();
 
         if (!result || !result.submissions) {
-            throw new Error("Unable to retrieve results from Judge0 API (possibly rate-limited or offline)");
+            await waiting(3000);
+            continue;
         }
 
         const IsResultObtained = result.submissions.every((r) => r.status_id > 2);
 
         if (IsResultObtained) return result.submissions;
 
-        await waiting(5000);
+        await waiting(3000);
     }
+
+    throw new Error("Execution timeout: Judge0 evaluation took too long.");
 
 }
 module.exports = { getLanguageById, submitBatch, submitToken };

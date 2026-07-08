@@ -45,9 +45,17 @@ const submitCode = async (req, res) => {
 
         const submitResult = await submitBatch(submissions);
 
+        if (!submitResult || !Array.isArray(submitResult)) {
+            return res.status(500).json({ accepted: false, error: "Failed to submit batch to evaluation engine." });
+        }
+
         const resultToken = submitResult.map((val) => val.token);
 
         const testResult = await submitToken(resultToken);
+
+        if (!testResult || !Array.isArray(testResult)) {
+            return res.status(500).json({ accepted: false, error: "Failed to fetch evaluation results from Judge0 API." });
+        }
 
         let testCasesPassed = 0;
         let runtime = 0;
@@ -58,8 +66,8 @@ const submitCode = async (req, res) => {
         for (const test of testResult) {
             if (test.status_id == 3) {
                 testCasesPassed++;
-                runtime = runtime + parseFloat(test.time);
-                memory = Math.max(memory, test.memory);
+                runtime = runtime + (parseFloat(test.time) || 0);
+                memory = Math.max(memory, test.memory || 0);
             }
             else {
                 if (status === 'accepted') {
@@ -76,8 +84,8 @@ const submitCode = async (req, res) => {
 
         submittedResult.status = status;
         submittedResult.testCasesPassed = testCasesPassed;
-        submittedResult.errorMessage = errorMessage;
-        submittedResult.runtime = runtime;
+        submittedResult.errorMessage = errorMessage || '';
+        submittedResult.runtime = Number(runtime.toFixed(3));
         submittedResult.memory = memory;
 
         await submittedResult.save();
@@ -179,20 +187,17 @@ const runCode = async (req, res) => {
 
         const submitResult = await submitBatch(submissions);
 
-        // console.log("third");
-
-        // console.log("Submit Result:- ");
-        // console.log(submitResult);
-
-        // console.log(typeof submitResult);
-        // console.log(Array.isArray(submitResult));
+        if (!submitResult || !Array.isArray(submitResult)) {
+            return res.status(500).json({ success: false, error: "Failed to submit test cases to evaluation engine." });
+        }
 
         const resultToken = submitResult.map((val) => val.token);
-        console.log("Result token:-");
-        console.log(resultToken);
 
         const testResult = await submitToken(resultToken);
 
+        if (!testResult || !Array.isArray(testResult)) {
+            return res.status(500).json({ success: false, error: "Failed to retrieve test case results from Judge0 API." });
+        }
 
         let testCasesPassed = 0;
         let runtime = 0;
@@ -203,25 +208,22 @@ const runCode = async (req, res) => {
         for (const test of testResult) {
             if (test.status_id == 3) {
                 testCasesPassed++;
-                runtime = runtime + parseFloat(test.time);
-                memory = Math.max(memory, test.memory);
+                runtime = runtime + (parseFloat(test.time) || 0);
+                memory = Math.max(memory, test.memory || 0);
             }
             else {
-                if (test.status_id == 4) {
-                    status = false;
-                    errorMessage = test.compile_output || test.stderr || test.status?.description || "Error executing code";
-                }
-                else {
-                    status = false;
+                status = false;
+                if (!errorMessage) {
                     errorMessage = test.compile_output || test.stderr || test.status?.description || "Error executing code";
                 }
             }
         }
-        res.status(201).json({
+        res.status(200).json({
             success: status,
             testCases: testResult,
-            runtime,
+            runtime: Number(runtime.toFixed(3)),
             memory,
+            error: errorMessage
         });
     }
     catch (err) {
@@ -243,15 +245,23 @@ const runPlayground = async (req, res) => {
 
         const submitResult = await submitBatch([{ source_code: code, language_id: languageId, stdin }]);
 
+        if (!submitResult || !Array.isArray(submitResult) || !submitResult[0]?.token) {
+            return res.status(500).json({ error: "Failed to submit code to playground evaluation engine." });
+        }
+
         const results = await submitToken(submitResult.map(v => v.token));
+
+        if (!results || !Array.isArray(results) || !results[0]) {
+            return res.status(500).json({ error: "Failed to retrieve execution output from Judge0 API." });
+        }
+
         const result = results[0];
         return res.status(200).json({
             stdout: result.stdout || '',
             stderr: result.stderr || '',
-            // compile_output holds the error when status_id is 6 (Compilation Error)
             compile_output: result.compile_output || '',
             status: result.status?.description || 'Unknown',
-            runtime: result.time || 0,
+            runtime: Number((parseFloat(result.time) || 0).toFixed(3)),
             memory: result.memory || 0,
         });
     }
