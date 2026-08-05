@@ -3,6 +3,7 @@ const Problem = require("../models/problem");
 const User = require("../models/user");
 const Submission = require("../models/submission");
 const solutionVideo = require("../models/solutionVideo");
+const jwt = require("jsonwebtoken");
 
 
 const createProblem = async (req, res) => {
@@ -175,23 +176,39 @@ const getProblemById = async (req, res) => {
             return res.status(404).send("Problem is missing");
         }
 
-
+        let responseData = getProblem.toObject();
 
         const video = await solutionVideo.findOne({ problemId: id });
 
         if (video) {
-
-            const responseData = {
-                ...getProblem.toObject(),
-                secureUrl: video.secureUrl,
-                cloudinaryPublicId: video.cloudinaryPublicId,
-                thumbnailUrl: video.thumbnailUrl,
-                duration: video.duration
-            }
-            return res.status(200).send(responseData);
+            responseData.secureUrl = video.secureUrl;
+            responseData.cloudinaryPublicId = video.cloudinaryPublicId;
+            responseData.thumbnailUrl = video.thumbnailUrl;
+            responseData.duration = video.duration;
         }
 
-        res.status(200).send(getProblem);
+        // 🟢 DIRECT INLINE PRO USER CHECK
+        let isProUser = false;
+        try {
+            const { token } = req.cookies;
+            if (token) {
+                const decoded = jwt.verify(token, process.env.JWT_KEY);
+                const user = await User.findById(decoded._id);
+                if (user && (user.isPremium || user.role === 'admin')) {
+                    isProUser = true; // ✅ User is Premium or Admin
+                }
+            }
+        } catch (e) {
+            // Guest user or expired token — ignore silently!
+        }
+
+        // 🔒 If NOT a Pro User, delete Pro fields before sending JSON
+        if (!isProUser) {
+            delete responseData.referenceSolution;
+            delete responseData.secureUrl;
+        }
+
+        res.status(200).send(responseData);
     }
     catch (err) {
         res.status(500).send("Error: " + err.message);

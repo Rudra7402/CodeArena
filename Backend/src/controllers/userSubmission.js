@@ -17,9 +17,7 @@ const submitCode = async (req, res) => {
             return res.status(400).send("Some field missing");
         }
 
-        // if(language=='cpp'){
-        //     language = 'c++';
-        // }
+     
 
         const problem = await Problem.findById(problemId);
 
